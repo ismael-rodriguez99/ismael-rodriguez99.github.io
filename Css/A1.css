@@ -1,0 +1,41 @@
+
+*{
+    text-align: left;
+    color: blue;
+}
+
+    body {
+  background-color: lightblue;
+}
+
+h1 {
+  color: red;
+  text-align: center;
+}
+
+.grandegrande
+{
+    font-family: monospace;
+    font-size: 60px;
+    color: yellow;
+}
+
+.medianamediana
+{
+    font-family: monospace;
+    font-size: 30px;
+}
+
+.colorcolor
+{
+    color: red;
+}
+
+p {
+  font-family: monospace;
+  font-size: 60px;
+}
+
+#prime {
+    color: greenyellow;
+}
