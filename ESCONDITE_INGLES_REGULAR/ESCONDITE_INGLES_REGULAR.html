@@ -49,7 +49,6 @@
     const canvas = document.getElementById("gameCanvas"),
           ctx    = canvas.getContext("2d");
 
-    // 1) Definición de casillas y jugadores
     const casillas = Array.from({length:8},(_,i)=>({
       x:30, y:80+i*70, w:30, h:30
     }));
@@ -60,7 +59,6 @@
     };
     let elecciones = {1:null,2:null,3:null};
 
-    // 2) Bolsa y caras
     const bolsaOriginal = ["negro1","negro2","negro3","rojo"];
     let bolsa = [...bolsaOriginal];
 
@@ -71,7 +69,6 @@
       rojo:  [1,1,1,1,1,0]
     };
 
-    // 3) Dibujo de tablero y jugadores
     function bucleJuego(){
       ctx.clearRect(0,0,canvas.width,canvas.height);
       pintarCasillas();
@@ -105,7 +102,6 @@
       }
     }
 
-    // 4) Lógica de elecciones
     function elegir(id,accion){
       elecciones[id]=accion;
       if(elecciones[1]&&elecciones[2]&&elecciones[3]){
@@ -113,7 +109,6 @@
       }
     }
 
-    // 5) Sacar un dado de la bolsa
     function sacarDado(){
       const i = Math.floor(Math.random()*bolsa.length);
       const dado = bolsa.splice(i,1)[0];
@@ -123,7 +118,6 @@
 
       aplicarReglas(dado);
 
-      // si es rojo o ya no quedan negros, repone la bolsa
       if(dado==="rojo" || !bolsa.some(d=>d.startsWith("negro"))){
         bolsa = [...bolsaOriginal];
       }
@@ -132,7 +126,6 @@
       bucleJuego();
     }
 
-    // 6) Aplicar reglas: cada jugador “tira” el mismo dado
     function aplicarReglas(dado){
       for(let id=1;id<=3;id++){
         const j=jugadores[id], acc=elecciones[id];
@@ -140,11 +133,10 @@
           if(dado==="rojo" && !j.corazon) j.corazon=true;
         }
         else if(acc==="andar"){
-          // cada uno obtiene un valor aleatorio de ese dado
           const tirada = caras[dado][Math.floor(Math.random()*6)];
           if(dado.startsWith("negro")){
             mover(id, tirada);
-          } else { // rojo
+          } else { 
             if(j.corazon) j.corazon=false;
             else mover(id, -tirada);
           }
@@ -162,13 +154,11 @@
       if(j.y<80)  j.y=80;
     }
 
-    // 7) Mostrar bolsa restante
     function actualizarBolsa(){
       document.getElementById("bolsaRestante").innerText =
         `Dados en bolsa: ${bolsa.join(", ")}`;
     }
 
-    // arranca
     bucleJuego();
   </script>
 </body>
