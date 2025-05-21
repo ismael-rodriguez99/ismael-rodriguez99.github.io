@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Escondite Inglés Regular</title>
+  <style>
+    canvas {
+      border: 2px solid black;
+      display: block;
+      margin: 2% auto 0;
+    }
+    body > div { text-align: center; margin-top: 1em; }
+    #T1 { color: blue; font-family: cursive; }
+    #T2 { color: orange; font-family: cursive; }
+    #T3 { color: purple; font-family: cursive; }
+    #resultadoDado, #bolsaRestante {
+      font-size: 18px;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body onload="bucleJuego();">
+
+  <canvas id="gameCanvas" width="500" height="620"></canvas>
+  <div id="resultadoDado"></div>
+  <div id="bolsaRestante"></div>
+
+  <div style="display: flex; justify-content: center; gap: 50px; margin-top: 20px;">
+    <div id="T1">
+      <p>Jugador 1 (Azul)</p>
+      <button onclick="elegir(1,'andar')">Avanzar</button>
+      <button onclick="elegir(1,'quieto')">Quedarme quieto</button>
+    </div>
+    <div id="T2">
+      <p>Jugador 2 (Naranja)</p>
+      <button onclick="elegir(2,'andar')">Avanzar</button>
+      <button onclick="elegir(2,'quieto')">Quedarme quieto</button>
+    </div>
+    <div id="T3">
+      <p>Jugador 3 (Morado)</p>
+      <button onclick="elegir(3,'andar')">Avanzar</button>
+      <button onclick="elegir(3,'quieto')">Quedarme quieto</button>
+    </div>
+  </div>
+  
+
+  <script>
+    const canvas = document.getElementById("gameCanvas"),
+          ctx    = canvas.getContext("2d");
+
+    // 1) Definición de casillas y jugadores
+    const casillas = Array.from({length:8},(_,i)=>({
+      x:30, y:80+i*70, w:30, h:30
+    }));
+    const jugadores = {
+      1:{x:160,y:570,w:50,h:30,color:'blue',corazon:false},
+      2:{x:260,y:570,w:50,h:30,color:'orange',corazon:false},
+      3:{x:360,y:570,w:50,h:30,color:'purple',corazon:false}
+    };
+    let elecciones = {1:null,2:null,3:null};
+
+    // 2) Bolsa y caras
+    const bolsaOriginal = ["negro1","negro2","negro3","rojo"];
+    let bolsa = [...bolsaOriginal];
+
+    const caras = {
+      negro1:[1,1,1,1,2,2],
+      negro2:[1,1,1,1,0,0],
+      negro3:[1,1,0,0,0,0],
+      rojo:  [1,1,1,1,1,0]
+    };
+
+    // 3) Dibujo de tablero y jugadores
+    function bucleJuego(){
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      pintarCasillas();
+      pintarCasillaFinal();
+      Object.values(jugadores).forEach(j=>pintarJugador(j));
+      actualizarBolsa();
+    }
+    function pintarCasillas(){
+      ctx.fillStyle="black";
+      casillas.slice(0,-1)
+        .forEach(c=>ctx.fillRect(c.x,c.y,c.w,c.h));
+    }
+    function pintarCasillaFinal(){
+      const c=casillas[casillas.length-1];
+      ctx.fillStyle="green";
+      ctx.fillRect(c.x,c.y,c.w,c.h);
+    }
+    function pintarJugador(j){
+      ctx.fillStyle=j.color;
+      ctx.beginPath();
+      ctx.moveTo(j.x,j.y);
+      ctx.lineTo(j.x-j.w/2,j.y+j.h);
+      ctx.lineTo(j.x+j.w/2,j.y+j.h);
+      ctx.closePath();
+      ctx.fill();
+      if(j.corazon){
+        ctx.beginPath();
+        ctx.arc(j.x,j.y-10,6,0,Math.PI*2);
+        ctx.fillStyle="red";
+        ctx.fill();
+      }
+    }
+
+    // 4) Lógica de elecciones
+    function elegir(id,accion){
+      elecciones[id]=accion;
+      if(elecciones[1]&&elecciones[2]&&elecciones[3]){
+        sacarDado();
+      }
+    }
+
+    // 5) Sacar un dado de la bolsa
+    function sacarDado(){
+      const i = Math.floor(Math.random()*bolsa.length);
+      const dado = bolsa.splice(i,1)[0];
+
+      document.getElementById("resultadoDado").innerText =
+        `Dado extraído: ${dado.toUpperCase()}`;
+
+      aplicarReglas(dado);
+
+      // si es rojo o ya no quedan negros, repone la bolsa
+      if(dado==="rojo" || !bolsa.some(d=>d.startsWith("negro"))){
+        bolsa = [...bolsaOriginal];
+      }
+
+      elecciones={1:null,2:null,3:null};
+      bucleJuego();
+    }
+
+    // 6) Aplicar reglas: cada jugador “tira” el mismo dado
+    function aplicarReglas(dado){
+      for(let id=1;id<=3;id++){
+        const j=jugadores[id], acc=elecciones[id];
+        if(acc==="quieto"){
+          if(dado==="rojo" && !j.corazon) j.corazon=true;
+        }
+        else if(acc==="andar"){
+          // cada uno obtiene un valor aleatorio de ese dado
+          const tirada = caras[dado][Math.floor(Math.random()*6)];
+          if(dado.startsWith("negro")){
+            mover(id, tirada);
+          } else { // rojo
+            if(j.corazon) j.corazon=false;
+            else mover(id, -tirada);
+          }
+        }
+        if(j.y<=80){
+          setTimeout(()=>alert(`¡Jugador ${id} ha ganado!`),100);
+        }
+      }
+    }
+
+    function mover(id, pasos){
+      const j=jugadores[id];
+      j.y -= pasos*70;
+      if(j.y>570) j.y=570;
+      if(j.y<80)  j.y=80;
+    }
+
+    // 7) Mostrar bolsa restante
+    function actualizarBolsa(){
+      document.getElementById("bolsaRestante").innerText =
+        `Dados en bolsa: ${bolsa.join(", ")}`;
+    }
+
+    // arranca
+    bucleJuego();
+  </script>
+</body>
+</html>
